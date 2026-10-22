@@ -95,7 +95,12 @@ class CheckeredPainter extends CustomPainter {
     for (final y in h) {
       for (final x in w) {
         if ((x ~/ rectSize).isOdd == (y ~/ rectSize).isOdd) {
-          rectsPath.addRect(Rect.fromLTWH(x, y, rectSize, rectSize));
+          rectsPath
+            ..moveTo(x, y)
+            ..lineTo(x + rectSize, y)
+            ..lineTo(x + rectSize, y + rectSize)
+            ..lineTo(x, y + rectSize)
+            ..close();
         }
       }
     }
