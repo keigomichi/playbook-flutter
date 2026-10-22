@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:playbook/src/scenario.dart';
 
-typedef ScenarioWidgetBuilder = Widget Function(
-  BuildContext context,
-  Widget child,
-);
+typedef ScenarioWidgetBuilder =
+    Widget Function(
+      BuildContext context,
+      Widget child,
+    );
 
 class ScenarioWidget extends StatelessWidget {
   const ScenarioWidget({
@@ -88,24 +89,48 @@ class CheckeredPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final h = List.generate(size.height ~/ rectSize + 1, (i) => i * rectSize);
-    final w = List.generate(size.width ~/ rectSize + 1, (i) => i * rectSize);
-    final rectsPath = Path();
-
-    for (final y in h) {
-      for (final x in w) {
-        if ((x ~/ rectSize).isOdd == (y ~/ rectSize).isOdd) {
-          rectsPath.addRect(Rect.fromLTWH(x, y, rectSize, rectSize));
-        }
-      }
-    }
-
-    final paint = Paint()
-      ..color = color
-      ..style = PaintingStyle.fill;
-    canvas.drawPath(rectsPath, paint);
+    final path = _buildCheckeredPath(
+      size,
+      rectSize,
+      integer: _integerGridIsExact(size, rectSize),
+    );
+    canvas.drawPath(path, Paint()..color = color);
   }
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+Path _buildCheckeredPath(Size size, double cell, {required bool integer}) {
+  final rows = size.height ~/ cell + 1;
+  final columns = size.width ~/ cell + 1;
+  final path = Path();
+  for (var row = 0; row < rows; row++) {
+    final y = row * cell;
+    for (
+      var column = integer ? row % 2 : 0;
+      column < columns;
+      column += integer ? 2 : 1
+    ) {
+      final x = column * cell;
+      if (integer || (x ~/ cell).isOdd == (y ~/ cell).isOdd) {
+        path
+          ..moveTo(x, y)
+          ..lineTo(x + cell, y)
+          ..lineTo(x + cell, y + cell)
+          ..lineTo(x, y + cell)
+          ..close();
+      }
+    }
+  }
+  return path;
+}
+
+bool _integerGridIsExact(Size size, double cell) {
+  const exactIntegerLimit = 9007199254740992.0;
+  return cell == cell.truncateToDouble() &&
+      cell > 0 &&
+      cell < exactIntegerLimit &&
+      (size.width ~/ cell + 1) * cell < exactIntegerLimit &&
+      (size.height ~/ cell + 1) * cell < exactIntegerLimit;
 }
